@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Questionnaire MotionSense</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout : une colonne étroite façon formulaire mobile, un écran par étape */
+:root {
+  --bg: #f5f7f7;
+  --surface: #ffffff;
+  --fg: #172322;
+  --muted: #5b6b69;
+  --line: #d6dfde;
+  --accent: #0f6b63;
+  --accent-soft: #e0f0ee;
+  --on-accent: #ffffff;
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1615; --surface: #172120; --fg: #e4eceb; --muted: #94a6a3;
+    --line: #2c3a38; --accent: #4fbfb3; --accent-soft: #1d3633; --on-accent: #08201d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1615; --surface: #172120; --fg: #e4eceb; --muted: #94a6a3;
+  --line: #2c3a38; --accent: #4fbfb3; --accent-soft: #1d3633; --on-accent: #08201d;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); color: var(--fg); }
+body {
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+/* Styles minimaux nécessaires à jsPsych (sa feuille officielle n'est pas chargée ici) */
+.jspsych-display-element { min-height: 100%; }
+.jspsych-display-element:focus, #app:focus { outline: none; }
+.jspsych-content-wrapper { display: flex; justify-content: center; width: 100%; }
+.jspsych-content { width: 100%; max-width: 560px; text-align: left; }
+.jspsych-btn {
+  font: 600 16px/1 var(--font-body); padding: 14px 20px; border-radius: 10px;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent);
+  cursor: pointer; width: 100%;
+}
+.jspsych-btn.secondary { background: transparent; color: var(--accent); }
+.jspsych-btn:focus-visible, input:focus-visible + span, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.jspsych-html-button-response-btngroup { display: grid; gap: 10px; margin-top: 20px; }
+#jspsych-survey-html-form-next { margin-top: 24px; }
+
+h1, h2 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h1 { font-size: 1.6rem; line-height: 1.2; }
+h2 { font-size: 1.2rem; }
+p { margin: 0; }
+.stack { display: grid; gap: 14px; }
+.muted { color: var(--muted); font-size: 0.92rem; }
+.eyebrow { font: 600 0.75rem/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+
+.topbar { display: grid; gap: 8px; margin-bottom: 18px; }
+.topbar-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.video-num { font: 600 1.9rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.video-num small { font-size: 1rem; color: var(--muted); font-weight: 500; }
+.progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.progress > div { height: 100%; background: var(--accent); }
+.watch { background: var(--accent-soft); border-radius: 10px; padding: 10px 14px; font-size: 0.92rem; }
+
+.item { padding-block: 16px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.item:first-of-type { border-top: 0; }
+.item-title { font-weight: 600; }
+.scale { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 3px; }
+.scale label { position: relative; display: block; }
+.scale input { position: absolute; opacity: 0; inset: 0; margin: 0; pointer-events: none; }
+.scale span {
+  display: flex; align-items: center; justify-content: center; height: 40px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+  font-size: 0.85rem; font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.scale input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.poles { display: flex; justify-content: space-between; gap: 12px; font-size: 0.82rem; color: var(--muted); }
+.poles span:last-child { text-align: right; }
+
+.checks { display: grid; gap: 8px; }
+.checks label { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.checks input { width: 20px; height: 20px; accent-color: var(--accent); }
+input.texte { width: 100%; box-sizing: border-box; font: inherit; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+input.texte:disabled { opacity: 0.45; }
+.stop-btn { display: block; margin: 28px auto 0; background: none; border: 0; color: var(--muted); font: 500 0.85rem var(--font-body); text-decoration: underline; cursor: pointer; padding: 8px; }
+.stop-btn[data-confirme] { color: #b42318; font-weight: 600; }
+input.curseur { width: 100%; accent-color: var(--accent); height: 32px; margin: 0; }
+input.curseur.intouche { opacity: 0.45; }
+.poles span:nth-child(2):not(:last-child) { text-align: center; }
+.item.erreur { background: color-mix(in srgb, #d92d20 10%, transparent); border-radius: 10px; padding-inline: 10px; }
+.item.erreur::after { content: "Réponse manquante"; color: #b42318; font-size: 0.85rem; font-weight: 600; }
+.liste-ordre { columns: 2; font: 600 1.1rem var(--font-display); font-variant-numeric: tabular-nums; padding-left: 2em; margin: 0; }
+.choix { display: grid; gap: 8px; }
+.choix-ligne { display: grid; grid-template-columns: 4.2em repeat(4, minmax(0, 1fr)); gap: 6px; align-items: center; }
+.choix-sujet { font: 600 1rem var(--font-display); font-variant-numeric: tabular-nums; }
+.choix-btn { height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: 600 1rem var(--font-body); cursor: pointer; }
+.choix-btn:disabled { background: transparent; border-style: dashed; color: var(--muted); opacity: 0.45; text-decoration: line-through; cursor: not-allowed; }
+.choix-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.etat-envoi { padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); font-weight: 600; }
+.etat-envoi[data-etat="echec"] { background: color-mix(in srgb, #d92d20 14%, transparent); }
+textarea { width: 100%; box-sizing: border-box; min-height: 110px; font: inherit; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+
+.demo-box { border: 1px dashed var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 12px; background: var(--surface); }
+.demo-box fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
+.demo-box legend { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg label { flex: 1 1 auto; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; text-align: center; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.88rem; cursor: pointer; }
+.seg input:checked + span { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); font-weight: 600; }
+.seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.data-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; max-height: 320px; }
+table { border-collapse: collapse; font-size: 0.8rem; font-variant-numeric: tabular-nums; width: 100%; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { position: sticky; top: 0; background: var(--surface); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jspsych@8.2.3/dist/index.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@jspsych/plugin-html-button-response@2.1.0/dist/index.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@jspsych/plugin-survey-html-form@2.1.0/dist/index.browser.min.js"></script>
+<script>
+// ---------- Envoi des données ----------
+// Adresse du script Google Apps Script (voir google-apps-script.gs et INSTALLATION.md).
+// Laisser vide pour ne rien envoyer : le CSV est alors seulement téléchargé sur l'appareil.
+const URL_ENVOI = "https://script.google.com/macros/s/AKfycbyp3nlz9aHnuY5TGNgCgxuFfpqEbfwLihAPIbBgBwlOrPjOs4GwLek5_Jebsk9YbH4/exec";
+// Clé partagée avec le script, pour écarter les envois qui ne viennent pas du questionnaire.
+const CLE_ENVOI = "motionsense-2026";
+
+// ---------- Contenu du questionnaire ----------
+// Tronçons : 7 sujets × 4 vidéos.
+const SUJETS = ["P001", "P002", "P003", "P005", "P006", "P007", "P008"];
+const VIDEOS = ["A", "B", "C", "D"];
+// Numéro de séance (?seance=1, 2, 3…), enregistré dans le CSV.
+// Pour afficher un ordre de passage aléatoire propre à la séance : index.html?seance=1&liste
+const params = new URLSearchParams(location.search);
+const SEANCE = Math.max(1, parseInt(params.get("seance"), 10) || 1);
+function aleaGraine(graine) {
+  return function () {
+    graine |= 0; graine = (graine + 0x6D2B79F5) | 0;
+    let t = Math.imul(graine ^ (graine >>> 15), 1 | graine);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function ordreAleatoire(seance) {
+  const alea = aleaGraine(seance * 7919);
+  const tous = SUJETS.flatMap(s => VIDEOS.map(v => `${s}-${v}`));
+  for (;;) {
+    const l = tous.slice();
+    for (let k = l.length - 1; k > 0; k--) { const j = Math.floor(alea() * (k + 1)); [l[k], l[j]] = [l[j], l[k]]; }
+    if (l.every((x, k) => k === 0 || x.split("-")[0] !== l[k - 1].split("-")[0])) return l;
+  }
+}
+const PLAYLIST = ordreAleatoire(SEANCE);
+
+const LABAN = [
+  { id: "flux",     nom: "Flux",     gauche: "Libre",  droite: "Contrôlé" },
+  { id: "espace",   nom: "Espace",   gauche: "Étroit", droite: "Spacieux" },
+  { id: "rapidite", nom: "Rapidité", gauche: "Lent",   droite: "Rapide" },
+  { id: "poids",    nom: "Poids",    gauche: "Léger",  droite: "Lourd" }
+];
+const EMOTIONS = [
+  { id: "joie",         nom: "Joie" },
+  { id: "tristesse",    nom: "Tristesse" },
+  { id: "tension",      nom: "Tension" },
+  { id: "tranquillite", nom: "Tranquillité" }
+];
+
+// ---------- Outils ----------
+const pid = Math.random().toString(36).slice(2, 8).toUpperCase();
+// Groupe : A = émotions puis Laban ; B = Laban puis émotions.
+// Il se choisit dans l'adresse (index.html?ordre=A ou ?ordre=B), sinon il est tiré au hasard.
+const ORDRE = ["A", "B"].includes((params.get("ordre") || "").toUpperCase()) ? params.get("ordre").toUpperCase() : (Math.random() < 0.5 ? "A" : "B");
+
+function echelle(name, n, gauche, droite) {
+  let cases = "";
+  for (let v = 1; v <= n; v++) {
+    cases += `<label><input type="radio" name="${name}" value="${v}" ${v === 1 ? "required" : ""} aria-label="${v}"><span>${v}</span></label>`;
+  }
+  return `<div class="scale" role="radiogroup" style="grid-template-columns: repeat(${n}, minmax(0, 1fr))">${cases}</div><div class="poles"><span>${gauche}</span><span>${droite}</span></div>`;
+}
+// Curseur continu de -1 à 1. Le participant doit le toucher au moins une fois.
+function curseur(l) {
+  return `<div class="item"><div class="item-title">${l.gauche} – ${l.droite}</div>
+    <input type="range" class="curseur intouche" name="${l.id}" min="-1" max="1" step="0.01" value="0" aria-label="${l.gauche} – ${l.droite}">
+    <div class="poles"><span>${l.gauche} (−1)</span><span>0</span><span>${l.droite} (+1)</span></div></div>`;
+}
+function entete(i, etape) {
+  return `<div class="topbar">
+    <div class="topbar-row"><div class="video-num">${COURANT.replace("-", " · ")} <small>vidéo n° ${NB_FAITES + 1}</small></div>
+    <span class="muted">Partie ${etape + 1} sur 3</span></div>
+    <div class="progress"><div style="width:${Math.round(etape / 3 * 100)}%"></div></div>
+  </div>`;
+}
+function pageEmotions(i, etape) {
+  return entete(i, etape) + `<h2>Quelle émotion la personne a-t-elle souhaité faire ressentir à travers cette danse&nbsp;?</h2>
+    <p class="muted">De 1 (très peu) à 5 (très fortement), pour chaque émotion.</p>` +
+    EMOTIONS.map(e => `<div class="item"><div class="item-title">${e.nom}</div>${echelle(e.id, 5, "1 : très peu", "5 : très fortement")}</div>`).join("");
+}
+function pageLaban(i, etape) {
+  return entete(i, etape) + `<h2>Comment décririez-vous le mouvement&nbsp;?</h2>
+    <p class="muted">Placez chaque curseur entre les deux pôles, de −1 à +1.</p>` +
+    LABAN.map(curseur).join("");
+}
+
+function champNsp(id, titre) {
+  return `<div class="item"><label class="item-title" for="${id}">${titre}</label>
+    <input type="text" class="texte" id="${id}" name="${id}" required autocomplete="off">
+    <div class="checks"><label><input type="checkbox" class="nsp" data-cible="${id}" name="${id}_nsp" value="nsp"> Je ne sais pas</label></div></div>`;
+}
+function pageImaginaires(i, etape) {
+  return entete(i, etape) + `<h2>On veut lier des imaginaires à cette danse</h2>
+    <p class="muted">Quelques mots suffisent.</p>` +
+    champNsp("paysage", "Quel paysage pourrait être associé à cette chorégraphie&nbsp;?") +
+    champNsp("objet", "Quel objet pourrait être associé à cette chorégraphie&nbsp;?") +
+    champNsp("texture", "Quelle texture pourrait être associée à cette chorégraphie&nbsp;?");
+}
+// Comportements de la page : « Je ne sais pas », curseurs touchés, case « tous compris » exclusive.
+function brancherPage() {
+  document.querySelectorAll("input.nsp").forEach(cb => cb.addEventListener("change", () => {
+    const champ = document.getElementById(cb.dataset.cible);
+    champ.disabled = cb.checked;
+    champ.required = !cb.checked;
+    if (cb.checked) champ.value = "";
+  }));
+  document.querySelectorAll("input.curseur").forEach(c => c.addEventListener("input", () => {
+    c.classList.remove("intouche");
+    c.closest(".item").classList.remove("erreur");
+  }));
+  document.querySelectorAll(".groupe-requis input[type=checkbox]").forEach(cb => cb.addEventListener("change", () => {
+    const groupe = cb.closest(".groupe-requis");
+    groupe.classList.remove("erreur");
+    if (!cb.checked) return;
+    groupe.querySelectorAll("input[type=checkbox]").forEach(autre => {
+      if (autre !== cb && (cb.classList.contains("exclusif") || autre.classList.contains("exclusif"))) autre.checked = false;
+    });
+  }));
+}
+// Avant l'envoi d'une page : bloque si un curseur n'a pas été touché ou si aucune case n'est cochée.
+document.addEventListener("submit", e => {
+  const manquants = [...document.querySelectorAll("input.curseur.intouche")].map(c => c.closest(".item"));
+  document.querySelectorAll(".groupe-requis").forEach(g => { if (!g.querySelector("input:checked")) manquants.push(g); });
+  if (manquants.length === 0) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  manquants.forEach(m => m.classList.add("erreur"));
+  manquants[0].scrollIntoView({ behavior: "smooth", block: "center" });
+}, true);
+
+// ---------- Déroulement ----------
+// Boucle : choix de la vidéo vue → 3 pages de questions → retour au choix.
+// « Terminer l'expérience » mène à la dernière section (compréhension de Laban), puis à l'export CSV.
+let FINI = false;            // le participant a demandé à terminer
+let COURANT = null;          // vidéo en cours d'évaluation, ex. "P005-B"
+let NB_FAITES = 0;           // nombre de vidéos évaluées
+const FAITES = new Set();
+
+// Lien discret sur les pages de questions : aller directement à la dernière section (deux appuis).
+function ajouterLienFin() {
+  const zone = document.querySelector(".jspsych-content");
+  if (!zone || zone.querySelector(".stop-btn")) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "stop-btn";
+  const texte = "Terminer l'expérience";
+  btn.textContent = texte;
+  btn.addEventListener("click", () => {
+    if (btn.dataset.confirme) { FINI = true; jsPsych.finishTrial({ abandon: true }); return; }
+    btn.dataset.confirme = "1";
+    btn.textContent = "Appuyez encore pour terminer (cette page ne sera pas enregistrée)";
+    setTimeout(() => { delete btn.dataset.confirme; btn.textContent = texte; }, 4000);
+  });
+  zone.appendChild(btn);
+}
+
+const jsPsych = initJsPsych({
+  display_element: "app",
+  on_finish: afficherDonnees
+});
+
+const accueil = {
+  type: jsPsychHtmlButtonResponse,
+  stimulus: `<div class="stack">
+    <span class="eyebrow">MotionSense</span>
+    <h1>Évaluer des danses de silhouettes</h1>
+    <p>Des danses très courtes (3 à 5 secondes) vont vous être montrées. Après chaque vidéo, indiquez ici laquelle vous avez vue, puis répondez aux questions. Il n'y a pas de bonne ou de mauvaise réponse.</p>
+    <p class="muted">Le questionnaire est anonyme. Code de passation : <strong>${pid}</strong> · groupe ${ORDRE} · séance ${SEANCE}</p>
+  </div>`,
+  choices: ["Commencer"],
+  on_finish: () => jsPsych.data.addProperties({ participant: pid, ordre: ORDRE, seance: SEANCE })
+};
+
+// Page de choix de la vidéo qui vient d'être montrée.
+const choixVideo = {
+  type: jsPsychHtmlButtonResponse,
+  choices: [],
+  stimulus: () => `<div class="stack">
+    <span class="eyebrow">${NB_FAITES === 0 ? "Première vidéo" : `${NB_FAITES} vidéo${NB_FAITES > 1 ? "s" : ""} évaluée${NB_FAITES > 1 ? "s" : ""}`}</span>
+    <h1>Quelle vidéo venez-vous de voir&nbsp;?</h1>
+    <p class="muted">Choisissez le sujet et la lettre annoncés. Les vidéos déjà évaluées sont grisées.</p>
+    <div class="choix">
+      ${SUJETS.map(s => `<div class="choix-ligne"><span class="choix-sujet">${s}</span>
+        ${VIDEOS.map(v => { const id = `${s}-${v}`; return `<button type="button" class="choix-btn" data-video="${id}" aria-label="${s} vidéo ${v}${FAITES.has(id) ? " (déjà évaluée)" : ""}"${FAITES.has(id) ? " disabled" : ""}>${v}</button>`; }).join("")}
+      </div>`).join("")}
+    </div>
+    <button type="button" class="jspsych-btn secondary" id="terminer">Terminer l'expérience</button>
+  </div>`,
+  on_load: () => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll(".choix-btn").forEach(b => b.addEventListener("click", () => {
+      COURANT = b.dataset.video;
+      jsPsych.finishTrial({ bloc: "choix", video_id: COURANT });
+    }));
+    const t = document.getElementById("terminer");
+    if (t) t.addEventListener("click", () => {
+      if (t.dataset.confirme) { FINI = true; jsPsych.finishTrial({ bloc: "choix", video_id: "" }); return; }
+      t.dataset.confirme = "1";
+      t.textContent = "Appuyez encore pour terminer";
+      setTimeout(() => { delete t.dataset.confirme; t.textContent = "Terminer l'expérience"; }, 4000);
+    });
+  }
+};
+
+// Une page de questions ; l'ordre émotions/Laban dépend du groupe A ou B, l'imaginaire vient toujours en 3e.
+function pageQuestions(etape) {
+  const estEmotion = () => (etape === 0) === (ORDRE === "A");
+  return {
+    timeline: [{
+      type: jsPsychSurveyHtmlForm,
+      html: () => etape === 2 ? pageImaginaires(0, etape) : (estEmotion() ? pageEmotions(0, etape) : pageLaban(0, etape)),
+      button_label: etape === 2 ? "Valider cette vidéo" : "Suivant",
+      data: () => ({ video_rang: NB_FAITES + 1, video_id: COURANT, bloc: etape === 2 ? "imaginaires" : (estEmotion() ? "emotion" : "laban") }),
+      on_load: () => { window.scrollTo(0, 0); brancherPage(); ajouterLienFin(); },
+      on_finish: d => { if (etape === 2 && !d.abandon) { FAITES.add(COURANT); NB_FAITES++; } }
+    }],
+    conditional_function: () => !FINI
+  };
+}
+const boucleVideos = {
+  timeline: [choixVideo, pageQuestions(0), pageQuestions(1), pageQuestions(2)],
+  loop_function: () => !FINI
+};
+
+// Dernière section : compréhension des critères, puis export.
+const fin = {
+  type: jsPsychSurveyHtmlForm,
+  html: `<div class="stack">
+    <span class="eyebrow">Dernière section</span>
+    <div class="item groupe-requis"><h2>Concernant les critères de Laban, y en a-t-il que vous n'avez pas compris&nbsp;?</h2>
+    <div class="checks">
+      ${LABAN.map(l => `<label><input type="checkbox" name="incompris_${l.id}" value="${l.id}"> ${l.gauche} – ${l.droite}</label>`).join("")}
+      <label><input type="checkbox" class="exclusif" name="incompris_aucun" value="aucun"> Non, je les ai tous compris</label>
+    </div></div>
+  </div>`,
+  button_label: "Arrêter et exporter les données",
+  data: { bloc: "final" },
+  on_load: () => { window.scrollTo(0, 0); brancherPage(); }
+};
+
+// ---------- Export des données ----------
+function lignesLongues() {
+  const rows = [];
+  jsPsych.data.get().filter({ trial_type: "survey-html-form" }).values().forEach(t => {
+    if (t.abandon) return;
+    const r = t.response || {};
+    const ligne = (item, valeur) => rows.push({ participant: t.participant, seance: t.seance, ordre: t.ordre, video_rang: t.video_rang ?? "", video_id: t.video_id ?? "", bloc: t.bloc, item, valeur });
+    if (t.bloc === "imaginaires") {
+      ["paysage", "objet", "texture"].forEach(k => ligne(k, r[k + "_nsp"] ? "NSP" : (r[k] || "")));
+    } else if (t.bloc === "final") {
+      const coches = Object.keys(r).filter(k => k.startsWith("incompris_")).map(k => r[k]);
+      ligne("incompris", coches.join("|"));
+    } else if (t.bloc === "laban") {
+      LABAN.forEach(l => ligne(l.id, r[l.id]));
+    } else {
+      EMOTIONS.forEach(e => ligne(e.id, r[e.id]));
+    }
+  });
+  return rows;
+}
+function telechargerCsv(csv) {
+  const horodatage = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `motionsense_seance${SEANCE}_${pid}_${horodatage}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  return a.download;
+}
+// Envoi unique, à la fin : toutes les lignes du CSV partent d'un coup vers le Google Sheet.
+async function envoyerDonnees(rows) {
+  if (!URL_ENVOI) return "desactive";
+  try {
+    await fetch(URL_ENVOI, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ cle: CLE_ENVOI, lignes: rows })
+    });
+    return "ok";
+  } catch (e) {
+    return "echec";
+  }
+}
+function afficherDonnees() {
+  const rows = lignesLongues();
+  const cols = ["participant", "seance", "ordre", "video_rang", "video_id", "bloc", "item", "valeur"];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const csv = [cols.join(",")].concat(rows.map(r => cols.map(c => `"${String(r[c]).replace(/"/g, '""')}"`).join(","))).join("\n");
+  const nomFichier = telechargerCsv(csv);
+  envoyerDonnees(rows).then(etat => {
+    const el = document.getElementById("etat-envoi");
+    if (!el) return;
+    el.textContent = {
+      ok: "Réponses envoyées à l'équipe.",
+      echec: "L'envoi a échoué (pas de connexion ?). Le fichier CSV téléchargé reste disponible : transmettez-le à l'équipe.",
+      desactive: "Envoi en ligne non configuré : seul le fichier CSV a été téléchargé."
+    }[etat];
+    el.dataset.etat = etat;
+  });
+  document.getElementById("app").innerHTML = `<div class="jspsych-content-wrapper"><div class="jspsych-content stack">
+    <span class="eyebrow">Merci</span>
+    <h1>Expérience terminée.</h1>
+    <p>Le fichier <strong>${esc(nomFichier)}</strong> a été téléchargé (${NB_FAITES} vidéo${NB_FAITES > 1 ? "s" : ""} évaluée${NB_FAITES > 1 ? "s" : ""}, ${rows.length} lignes).</p>
+    <p class="etat-envoi" id="etat-envoi">Envoi des réponses…</p>
+    <button class="jspsych-btn" id="retelecharger">Télécharger à nouveau le CSV</button>
+    <button class="jspsych-btn secondary" id="copier">Copier le CSV</button>
+    <div class="data-wrap"><table><thead><tr>${cols.map(c => `<th>${c}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${cols.map(c => `<td>${esc(r[c])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <textarea id="csv" readonly>${esc(csv)}</textarea>
+    <button class="jspsych-btn secondary" id="effacer">Effacer les réponses et recommencer</button>
+  </div></div>`;
+  document.getElementById("retelecharger").addEventListener("click", () => telechargerCsv(csv));
+  const effacer = document.getElementById("effacer");
+  effacer.addEventListener("click", () => {
+    if (effacer.dataset.confirme) { location.reload(); return; }
+    effacer.dataset.confirme = "1";
+    effacer.textContent = "Appuyez encore : les réponses seront perdues";
+    setTimeout(() => { delete effacer.dataset.confirme; effacer.textContent = "Effacer les réponses et recommencer"; }, 4000);
+  });
+  document.getElementById("copier").addEventListener("click", () => {
+    const ta = document.getElementById("csv");
+    navigator.clipboard.writeText(ta.value).then(
+      () => { document.getElementById("copier").textContent = "CSV copié"; },
+      () => { ta.select(); }
+    );
+  });
+}
+
+if (params.has("liste")) {
+  // Vue pour la personne qui montre les vidéos : un ordre aléatoire propre à la séance.
+  document.getElementById("app").innerHTML = `<div class="jspsych-content-wrapper"><div class="jspsych-content stack">
+    <span class="eyebrow">Séance ${SEANCE}</span>
+    <h1>Ordre de passage suggéré</h1>
+    <p class="muted">Ordre aléatoire pour la séance ${SEANCE}, sans deux vidéos du même sujet à la suite.</p>
+    <ol class="liste-ordre">${PLAYLIST.map(v => `<li>${v.replace("-", " · ")}</li>`).join("")}</ol>
+  </div></div>`;
+} else {
+  jsPsych.run([accueil, boucleVideos, fin]);
+}
+</script>
+
+</body>
+</html>
