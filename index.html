@@ -187,12 +187,12 @@ const pid = Math.random().toString(36).slice(2, 8).toUpperCase();
 // Il se choisit dans l'adresse (index.html?ordre=A ou ?ordre=B), sinon il est tiré au hasard.
 const ORDRE = ["A", "B"].includes((params.get("ordre") || "").toUpperCase()) ? params.get("ordre").toUpperCase() : (Math.random() < 0.5 ? "A" : "B");
 
-function echelle(name, n, gauche, droite) {
+function echelle(name, min, max, gauche, droite) {
   let cases = "";
-  for (let v = 1; v <= n; v++) {
-    cases += `<label><input type="radio" name="${name}" value="${v}" ${v === 1 ? "required" : ""} aria-label="${v}"><span>${v}</span></label>`;
+  for (let v = min; v <= max; v++) {
+    cases += `<label><input type="radio" name="${name}" value="${v}" ${v === min ? "required" : ""} aria-label="${v}"><span>${v}</span></label>`;
   }
-  return `<div class="scale" role="radiogroup" style="grid-template-columns: repeat(${n}, minmax(0, 1fr))">${cases}</div><div class="poles"><span>${gauche}</span><span>${droite}</span></div>`;
+  return `<div class="scale" role="radiogroup" style="grid-template-columns: repeat(${max - min + 1}, minmax(0, 1fr))">${cases}</div><div class="poles"><span>${gauche}</span><span>${droite}</span></div>`;
 }
 // Curseur continu de -1 à 1. Le participant doit le toucher au moins une fois.
 function curseur(l) {
@@ -208,9 +208,9 @@ function entete(i, etape) {
   </div>`;
 }
 function pageEmotions(i, etape) {
-  return entete(i, etape) + `<h2>Quelle émotion la personne a-t-elle souhaité faire ressentir à travers cette danse&nbsp;?</h2>
-    <p class="muted">De 1 (très peu) à 5 (très fortement), pour chaque émotion.</p>` +
-    EMOTIONS.map(e => `<div class="item"><div class="item-title">${e.nom}</div>${echelle(e.id, 5, "1 : très peu", "5 : très fortement")}</div>`).join("");
+  return entete(i, etape) + `<h2>Quel degré des émotions suivantes est représenté dans cette danse&nbsp;?</h2>
+    <p class="muted">De 0 (pas du tout) à 5 (très fortement), pour chaque émotion.</p>` +
+    EMOTIONS.map(e => `<div class="item"><div class="item-title">${e.nom}</div>${echelle(e.id, 0, 5, "0 : pas du tout", "5 : très fortement")}</div>`).join("");
 }
 function pageLaban(i, etape) {
   return entete(i, etape) + `<h2>Comment décririez-vous le mouvement&nbsp;?</h2>
