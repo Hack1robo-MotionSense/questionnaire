@@ -367,7 +367,7 @@ const fin = {
       <label><input type="checkbox" class="exclusif" name="incompris_aucun" value="aucun"> Non, je les ai tous compris</label>
     </div></div>
   </div>`,
-  button_label: "Arrêter et exporter les données",
+  button_label: "Terminer et envoyer mes réponses",
   data: { bloc: "final" },
   on_load: () => { window.scrollTo(0, 0); brancherPage(); }
 };
@@ -392,17 +392,7 @@ function lignesLongues() {
   });
   return rows;
 }
-function telechargerCsv(csv) {
-  const horodatage = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
-  a.download = `motionsense_seance${SEANCE}_${pid}_${horodatage}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  return a.download;
-}
-// Envoi unique, à la fin : toutes les lignes du CSV partent d'un coup vers le Google Sheet.
+// Envoi unique, à la fin : toutes les réponses partent d'un coup vers le Google Sheet.
 async function envoyerDonnees(rows) {
   if (!URL_ENVOI) return "desactive";
   try {
@@ -417,48 +407,41 @@ async function envoyerDonnees(rows) {
     return "echec";
   }
 }
+// Page de fin : envoi au Google Sheet, sans téléchargement ni affichage des données.
 function afficherDonnees() {
   const rows = lignesLongues();
-  const cols = ["participant", "seance", "ordre", "video_rang", "video_id", "bloc", "item", "valeur"];
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const csv = [cols.join(",")].concat(rows.map(r => cols.map(c => `"${String(r[c]).replace(/"/g, '""')}"`).join(","))).join("\n");
-  const nomFichier = telechargerCsv(csv);
-  envoyerDonnees(rows).then(etat => {
-    const el = document.getElementById("etat-envoi");
-    if (!el) return;
-    el.textContent = {
-      ok: "Réponses envoyées à l'équipe.",
-      echec: "L'envoi a échoué (pas de connexion ?). Le fichier CSV téléchargé reste disponible : transmettez-le à l'équipe.",
-      desactive: "Envoi en ligne non configuré : seul le fichier CSV a été téléchargé."
-    }[etat];
-    el.dataset.etat = etat;
-  });
   document.getElementById("app").innerHTML = `<div class="jspsych-content-wrapper"><div class="jspsych-content stack">
     <span class="eyebrow">Merci</span>
     <h1>Expérience terminée.</h1>
-    <p>Le fichier <strong>${esc(nomFichier)}</strong> a été téléchargé (${NB_FAITES} vidéo${NB_FAITES > 1 ? "s" : ""} évaluée${NB_FAITES > 1 ? "s" : ""}, ${rows.length} lignes).</p>
-    <p class="etat-envoi" id="etat-envoi">Envoi des réponses…</p>
-    <button class="jspsych-btn" id="retelecharger">Télécharger à nouveau le CSV</button>
-    <button class="jspsych-btn secondary" id="copier">Copier le CSV</button>
-    <div class="data-wrap"><table><thead><tr>${cols.map(c => `<th>${c}</th>`).join("")}</tr></thead>
-    <tbody>${rows.map(r => `<tr>${cols.map(c => `<td>${esc(r[c])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
-    <textarea id="csv" readonly>${esc(csv)}</textarea>
-    <button class="jspsych-btn secondary" id="effacer">Effacer les réponses et recommencer</button>
+    <p>Merci pour votre participation (${NB_FAITES} vidéo${NB_FAITES > 1 ? "s" : ""} évaluée${NB_FAITES > 1 ? "s" : ""}).</p>
+    <p class="etat-envoi" id="etat-envoi">Envoi de vos réponses…</p>
+    <button class="jspsych-btn" id="reessayer" hidden>Réessayer l'envoi</button>
+    <button class="jspsych-btn secondary" id="effacer">Nouveau participant</button>
   </div></div>`;
-  document.getElementById("retelecharger").addEventListener("click", () => telechargerCsv(csv));
+  const etat = document.getElementById("etat-envoi");
+  const reessayer = document.getElementById("reessayer");
+  function envoyer() {
+    etat.textContent = "Envoi de vos réponses…";
+    delete etat.dataset.etat;
+    reessayer.hidden = true;
+    envoyerDonnees(rows).then(r => {
+      etat.textContent = {
+        ok: "Vos réponses ont bien été envoyées.",
+        echec: "L'envoi a échoué. Vérifiez la connexion internet, puis appuyez sur « Réessayer l'envoi ».",
+        desactive: "Envoi non configuré : les réponses n'ont pas été envoyées."
+      }[r];
+      etat.dataset.etat = r;
+      reessayer.hidden = r !== "echec";
+    });
+  }
+  reessayer.addEventListener("click", envoyer);
+  envoyer();
   const effacer = document.getElementById("effacer");
   effacer.addEventListener("click", () => {
-    if (effacer.dataset.confirme) { location.reload(); return; }
+    if (etat.dataset.etat === "ok" || effacer.dataset.confirme) { location.reload(); return; }
     effacer.dataset.confirme = "1";
-    effacer.textContent = "Appuyez encore : les réponses seront perdues";
-    setTimeout(() => { delete effacer.dataset.confirme; effacer.textContent = "Effacer les réponses et recommencer"; }, 4000);
-  });
-  document.getElementById("copier").addEventListener("click", () => {
-    const ta = document.getElementById("csv");
-    navigator.clipboard.writeText(ta.value).then(
-      () => { document.getElementById("copier").textContent = "CSV copié"; },
-      () => { ta.select(); }
-    );
+    effacer.textContent = "Réponses non envoyées : appuyez encore pour les perdre";
+    setTimeout(() => { delete effacer.dataset.confirme; effacer.textContent = "Nouveau participant"; }, 4000);
   });
 }
 
